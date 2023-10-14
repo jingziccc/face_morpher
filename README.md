@@ -8,23 +8,13 @@ OpenCV 3
 
 # 使用
 ```bash
-python face_mopher [filename1] [filename2] [alpha]
+python face_morph
 ```
 
 # 例子
-1. Arya + Sansa
 
-![arya](https://github.com/WeiJiHsiao/face_morpher/blob/master/examples/arya.jpg)
-![sansa](https://github.com/WeiJiHsiao/face_morpher/blob/master/examples/sansa.jpg)
-![arya+sansa](https://github.com/WeiJiHsiao/face_morpher/blob/master/examples/arya_sansa_0.5.jpg)
+![cat](./assets/cat.jpg)
 
-2. Frank + Claire
+![tiger](./assets/tiger.jpg)
 
-![frank](https://github.com/WeiJiHsiao/face_morpher/blob/master/examples/frank.jpg)
-![claire](https://github.com/WeiJiHsiao/face_morpher/blob/master/examples/claire.jpg)
-![frank+claire](https://github.com/WeiJiHsiao/face_morpher/blob/master/examples/frank_claire_0.5.jpg)
-
-3. 神龙侠侣
-![](https://github.com/WeiJiHsiao/face_morpher/blob/master/examples/aunt&nephew.png)
-
-
+![cat_tiger_morphed](./assets/cat_tiger_morphed.jpg)

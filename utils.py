@@ -14,6 +14,7 @@ def get_name(image_path):
     return os.path.splitext(os.path.basename(image_path))[0]
 
 # 获取面部特征点，并将点保留在npy文件中
+
 def get_landmarks_points(image):
     img = image.copy()
     # 检测人脸
@@ -31,6 +32,8 @@ def get_landmarks_points(image):
             # 绘制特征点，并用cv2.circle给每个特征点画一个圈，共68个
             pt_pos = (pt.x, pt.y)
             cv2.circle(img, pt_pos, 2, (255, 0, 0), 1)
+            cv2.putText(img, str(i), pt_pos, fontFace=cv2.FONT_HERSHEY_SCRIPT_SIMPLEX, fontScale=0.4, color=(0, 0, 255))
+
     size = img.shape # 获取图片大小
     size = (size[1]-1, size[0]-1)
     for i, p in enumerate([(0,0), (0,size[1]), (size[0],0), size, (size[0]/2,0), (size[0]/2,size[1]), (0,size[1]/2), (size[0]/2,size[1]/2)]):
@@ -42,6 +45,58 @@ def get_landmarks_points(image):
     
     # return points
     
+
+def add_landmarks(image_path):
+    """_summary_
+    给图片添加特征点，通过点击鼠标左键添加特征点，右键删除最近的特征点
+    """
+    global image_name
+    image_name = get_name(image_path)
+    img = cv2.imread(image_path)
+    points = []
+
+    def mouse_callback(event, x, y, flags, param):
+        nonlocal points
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # 添加特征点
+            points.append((x, y))
+            # 绘制特征点
+            cv2.circle(img, (x, y), 2, (0, 0, 255), -1)
+            cv2.putText(img, str(len(points)-1), (x+5, y+5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+            cv2.imshow("Image", img)
+        elif event == cv2.EVENT_RBUTTONDOWN:
+            # 删除最近的特征点
+            if len(points) > 0:
+                dists = [((x - p[0]) ** 2 + (y - p[1]) ** 2) for p in points]
+                idx = np.argmin(dists)
+                points.pop(idx)
+                # 重新绘制特征点
+                img_copy = img.copy()
+                for i, p in enumerate(points):
+                    cv2.circle(img_copy, p, 2, (0, 0, 255), -1)
+                    cv2.putText(img_copy, str(i), (p[0]+5, p[1]+5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+                cv2.imshow("Image", img_copy)
+
+    cv2.namedWindow("Image")
+    cv2.setMouseCallback("Image", mouse_callback)
+
+    while True:
+        cv2.imshow("Image", img)
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
+            break
+        elif key == ord("s"):
+            size = img.shape # 获取图片大小
+            size = (size[1]-1, size[0]-1)
+            for i, p in enumerate([(0,0), (0,size[1]), (size[0],0), size, (size[0]/2,0), (size[0]/2,size[1]), (0,size[1]/2), (size[0]/2,size[1]/2)]):
+                points.append(p)
+            # 保存特征点坐标，名称为img+landmarks.npy，路径为output
+            np.save(output_path + image_name + '_landmarks.npy', np.array(points))
+            # 保存图片，名称为img_landmarks.jpg，路径为output
+            cv2.imwrite(output_path + image_name + '_landmarks.jpg', img)
+            break
+
+    cv2.destroyAllWindows()
 
 # Check if a point is inside a rectangle
 def rect_contains(rect, point):
@@ -141,23 +196,28 @@ def morph_triangle(img1, img2, img, tri1, tri2, tri, alpha):
         img[rect[1]:rect[1] + rect[3], rect[0]:rect[0] +
             rect[2]] * (1 - mask) + img_rect * mask
     
-    
-def face_morph(image_path, alpha=0.5):
+
+
+
+
+def face_morph(image_path, alpha=0.5,is_animal=False):
     """_summary_
     融合两张图片
     """
     global image_name
     image_name = get_name(image_path[0])
     img1 = cv2.imread(image_path[0])
-    get_landmarks_points(img1)
+    if(not is_animal):
+        get_landmarks_points(img1)
     points1 = np.load(output_path + image_name + '_landmarks.npy')
     
     image_name = get_name(image_path[1])  
     img2 = cv2.imread(image_path[1])
-    get_landmarks_points(img2)
+    if(not is_animal):
+        get_landmarks_points(img2)
     points2 = np.load(output_path + image_name + '_landmarks.npy')
     
-    points = (1 - alpha) * np.array(points1) + alpha * np.array(points2)# [[0,0][2,3]...]
+    points = (1 - alpha) * np.array(points1) + alpha * np.array(points2) # [[0,0][2,3]...]
     img_morphed = np.zeros(img1.shape, dtype=img1.dtype)
     triangles = Delaunay(points).simplices # 获取三角形索引列表[[71 16 70] [15 16 71]...]
     
